@@ -1,15 +1,23 @@
 '''
 Created on 24 jul. 2019
 
-@author: asies
+@author: MrAsieru
 '''
 import random
 import string
 import os
+
+rows = 0
+cols = 0
+bombs = 0
 or_grid = []
 vi_grid = []
+j_l = []
+i_l = []
+cleared = 0
 
 def start():
+    global rows, cols, bombs, vi_grid
     clearAll()
     print("Filas:")
     rows = int(input())
@@ -19,10 +27,12 @@ def start():
     bombs = int(input())
     clearAll()
     print("Generando partida de %dx%d con %d bombas..." % (rows, cols, bombs))
-    generator(cols, rows, bombs)
+    generator()
+    vi_grid = [["#" for i in range(cols)] for j in range(rows)]
+    inputManager()
 
-def generator (cols, rows, bombs):
-    global or_grid
+def generator ():
+    global or_grid, rows, cols, bombs
     or_grid = [["0" for i in range(cols)] for j in range(rows)]
     bombs_list = {}
     for e in range(0, bombs):
@@ -76,9 +86,9 @@ def generator (cols, rows, bombs):
             a = str(or_grid[j+1][i+1])
             if a.isdigit():
                 or_grid[j+1][i+1] = int(or_grid[j+1][i+1]) + 1
-    printGrid(or_grid)
     
 def printGrid(grid):
+    global j_l, i_l
     j_l = [i for i in range(1, len(grid) + 1)]
     i_l = list(string.ascii_uppercase)
     if len(grid[0]) > 26:
@@ -95,6 +105,19 @@ def printGrid(grid):
         for i in range(len(grid[0])):
             print("   "+str(grid[j][i]), end="")
         print("\n", end="")
+
+def inputManager():
+    global or_grid
+    global vi_grid
+    while(cleared < (rows*cols) - bombs):
+        printGrid(vi_grid)
+        inp = input()
+        inp_l = inp[:len(inp)-2]
+        inp_n = int(inp[len(inp)-2:])
+        print("%s %d" % (inp_l, inp_n))
+        
+    printGrid(or_grid)
+    print("CONGRATULATIONS!")
 
 def clearAll():
     if os.name == "posix": print("clear")
