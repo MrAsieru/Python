@@ -107,7 +107,7 @@ def printGrid(grid):
         print("\n", end="")
 
 def inputManager():
-    global or_grid
+    global or_grid, vi_grid, j_l, i_l
     global vi_grid
     while(cleared < (rows*cols) - bombs):
         printGrid(vi_grid)
@@ -115,7 +115,9 @@ def inputManager():
         inp_l = inp[:len(inp)-2]
         inp_n = int(inp[len(inp)-2:])
         print("%s %d" % (inp_l, inp_n))
-        
+        for j in j_l:
+            pass
+            #Nada de pass :v
     printGrid(or_grid)
     print("CONGRATULATIONS!")
 
