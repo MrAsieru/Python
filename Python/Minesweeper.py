@@ -1,34 +1,53 @@
 '''
 Created on 24 jul. 2019
-
 @author: MrAsieru
 '''
 import random
 import string
 import os
 
-rows = 0
-cols = 0
-bombs = 0
+rows = None
+cols = None
+bombs = None
 or_grid = []
 vi_grid = []
 j_l = []
 i_l = []
-cleared = 0
+cleared = {}
 
 def start():
     global rows, cols, bombs, vi_grid
     clearAll()
     print("Filas:")
-    rows = int(input())
+    while True:
+        try:
+            rows = int(input())
+            break
+        except:
+            print("Inserte un numero")
+            print("Filas:")
     print("Columnas:")
-    cols = int(input())  
+    while True:
+        try:
+            cols = int(input())
+            break
+        except:
+            print("Inserte un numero")
+            print("Columnas:")
     print("Bombas:")
-    bombs = int(input())
+    while True:
+        try:
+            bombs = int(input())
+            break
+        except:
+            print("Inserte un numero")
+            print("Bombas:")
     clearAll()
     print("Generando partida de %dx%d con %d bombas..." % (rows, cols, bombs))
     generator()
     vi_grid = [["#" for i in range(cols)] for j in range(rows)]
+    printGrid(or_grid)
+    print("")
     inputManager()
 
 def generator ():
@@ -109,17 +128,83 @@ def printGrid(grid):
 def inputManager():
     global or_grid, vi_grid, j_l, i_l
     global vi_grid
-    while(cleared < (rows*cols) - bombs):
+    while(len(cleared.keys()) < (rows*cols) - bombs):
         printGrid(vi_grid)
         inp = input()
         inp_l = inp[:len(inp)-2]
         inp_n = int(inp[len(inp)-2:])
         print("%s %d" % (inp_l, inp_n))
-        for j in j_l:
-            pass
-            #Nada de pass :v
+        for i in range(len(i_l)):
+            if i_l[i] == inp_l:
+                inp_l = i
+        for j in range(len(j_l)):
+            if j_l[j] == inp_n:
+                inp_n = j
+        print("l: %s n: %s" % (inp_l, inp_n))
+        if or_grid[inp_n][inp_l] == "0":
+            desbloquearCeros(int(inp_n), int(inp_l))
+            desbloquearAlrededorCeros()
+        elif or_grid[inp_n][inp_l] == "B":
+            perdido()
+        else:
+            desbloquear(int(inp_n), int(inp_l))
+            
     printGrid(or_grid)
     print("CONGRATULATIONS!")
+
+def desbloquear(j, i):
+    vi_grid[j][i] = or_grid[j][i]
+
+def desbloquearCeros(j, i):
+    for e in cleared.values():
+        if j == e[0] and i == e[1]:
+            return
+    if or_grid[j][i] == "0":
+        vi_grid[j][i] = "0"
+        cleared[len(cleared.keys())] = [j, i]
+    else:
+        return
+    #T
+    if j != 0:
+        desbloquearCeros(j-1, i)
+    #L
+    if i != 0:
+        desbloquearCeros(j, i-1)
+    #R
+    if i != cols - 1:
+        desbloquearCeros(j, i+1)
+    #B
+    if j != rows - 1:
+        desbloquearCeros(j+1, i)
+
+def desbloquearAlrededorCeros():
+    for a in range(len(vi_grid)):
+        for b in range(len(vi_grid[0])):
+            print("j: %d i: %d value: %s" % (a,b, or_grid[a][b]))
+            if or_grid[a][b] == "0":
+                #T
+                if a!= 0:
+                    if b!= 0:
+                        vi_grid[a-1][b-1] = or_grid[a-1][b-1]
+                    vi_grid[a-1][b] = or_grid[a-1][b]
+                    if b != rows - 1:
+                        vi_grid[a-1][b+1] = or_grid[a-1][b+1]
+                #C
+                if b!= 0:
+                        vi_grid[a][b-1] = or_grid[a][b-1]
+                if b != cols - 1:
+                        vi_grid[a][b+1] = or_grid[a][b+1]
+                #B
+                if a != rows - 1:
+                    if b != 0:
+                        vi_grid[a+1][b-1] = or_grid[a+1][b-1]
+                    vi_grid[a+1][b] == or_grid[a+1][b]
+                    if b != cols - 1:
+                        vi_grid[a+1][b+1] = or_grid[a+1][b+1]
+                
+
+def perdido():
+    print("Oof")
 
 def clearAll():
     if os.name == "posix": print("clear")
