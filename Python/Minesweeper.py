@@ -5,6 +5,7 @@ Created on 24 jul. 2019
 import random
 import string
 import os
+import time
 
 rows = None
 cols = None
@@ -14,6 +15,9 @@ vi_grid = []
 j_l = []
 i_l = []
 cleared = {}
+mark_bombs = 0
+startTime = 0
+gameOver = False
 
 def start():
     global rows, cols, bombs, vi_grid
@@ -46,14 +50,14 @@ def start():
     print("Generando partida de %dx%d con %d bombas..." % (rows, cols, bombs))
     generator()
     vi_grid = [["#" for i in range(cols)] for j in range(rows)]
-    printGrid(or_grid)
     print("")
     inputManager()
 
 def generator ():
-    global or_grid, rows, cols, bombs
+    global or_grid, rows, cols, bombs, mark_bombs
     or_grid = [["0" for i in range(cols)] for j in range(rows)]
     bombs_list = {}
+    mark_bombs = bombs
     for e in range(0, bombs):
         while True:
             j = random.randint(0, rows - 1)
@@ -126,33 +130,57 @@ def printGrid(grid):
         print("\n", end="")
 
 def inputManager():
-    global or_grid, vi_grid, j_l, i_l
-    global vi_grid
-    while(len(cleared.keys()) < (rows*cols) - bombs):
+    global or_grid, vi_grid, j_l, i_l, startTime, mark_bombs, rows, cols, bombs
+    startTime = time.time()
+    while len(cleared.keys()) != (rows*cols) - bombs:
+        print("%d != %d: %s" %(len(cleared.keys()), rows*cols - bombs, len(cleared.keys()) != (rows*cols) - bombs))
+        printGrid(or_grid)
         printGrid(vi_grid)
+        print("Tiempo: %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
+        print("Quedan %d bombas" % mark_bombs)
+        print("")
+        print("Insertar letra y numero de casilla para despejar. Ej. A01")
+        print("Insertar 'mark' mas letra y numero de casilla para marcar y desmarcar. Ej. mark A01")
         inp = input()
-        inp_l = inp[:len(inp)-2]
-        inp_n = int(inp[len(inp)-2:])
-        print("%s %d" % (inp_l, inp_n))
-        for i in range(len(i_l)):
-            if i_l[i] == inp_l:
-                inp_l = i
-        for j in range(len(j_l)):
-            if j_l[j] == inp_n:
-                inp_n = j
-        print("l: %s n: %s" % (inp_l, inp_n))
-        if or_grid[inp_n][inp_l] == "0":
-            desbloquearCeros(int(inp_n), int(inp_l))
-            desbloquearAlrededorCeros()
-        elif or_grid[inp_n][inp_l] == "B":
-            perdido()
-        else:
-            desbloquear(int(inp_n), int(inp_l))
-            
-    printGrid(or_grid)
-    print("CONGRATULATIONS!")
+        inp = inp.upper()
+        clearAll()
+        try:
+            if inp[:4] == "MARK":
+                inp = inp[5:]
+                inp_l = inp[:len(inp)-2]
+                inp_n = int(inp[len(inp)-2:])
+                for i in range(len(i_l)):
+                    if i_l[i] == inp_l:
+                        inp_l = i
+                for j in range(len(j_l)):
+                    if j_l[j] == inp_n:
+                        inp_n = j
+                marcarCasilla(int(inp_n), int(inp_l))
+            else:
+                inp_l = inp[:len(inp)-2]
+                inp_n = int(inp[len(inp)-2:])
+                for i in range(len(i_l)):
+                    if i_l[i] == inp_l:
+                        inp_l = i
+                for j in range(len(j_l)):
+                    if j_l[j] == inp_n:
+                        inp_n = j
+                if or_grid[inp_n][inp_l] == "0":
+                    desbloquearCeros(int(inp_n), int(inp_l))
+                    desbloquearAlrededorCeros()
+                elif or_grid[inp_n][inp_l] == "B":
+                    perdido()
+                    break
+                elif vi_grid[inp_n][inp_l] == "#":
+                    desbloquear(int(inp_n), int(inp_l))
+        except:
+            pass
+    if not gameOver:
+        printGrid(or_grid)
+        print("Has ganado! En %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
 
 def desbloquear(j, i):
+    cleared[len(cleared.keys())] = [j, i]
     vi_grid[j][i] = or_grid[j][i]
 
 def desbloquearCeros(j, i):
@@ -178,33 +206,69 @@ def desbloquearCeros(j, i):
         desbloquearCeros(j+1, i)
 
 def desbloquearAlrededorCeros():
+    global or_grid, vi_grid, cleared
     for a in range(len(vi_grid)):
         for b in range(len(vi_grid[0])):
-            print("j: %d i: %d value: %s" % (a,b, or_grid[a][b]))
-            if or_grid[a][b] == "0":
+            if or_grid[a][b] == "0" and [a, b] in cleared.values():
                 #T
                 if a!= 0:
                     if b!= 0:
                         vi_grid[a-1][b-1] = or_grid[a-1][b-1]
+                        cleared[len(cleared.keys())] = [j-1, i-1]
                     vi_grid[a-1][b] = or_grid[a-1][b]
+                    cleared[len(cleared.keys())] = [j-1, i]
                     if b != rows - 1:
                         vi_grid[a-1][b+1] = or_grid[a-1][b+1]
+                        cleared[len(cleared.keys())] = [j-1, i+1]
                 #C
                 if b!= 0:
                         vi_grid[a][b-1] = or_grid[a][b-1]
+                        cleared[len(cleared.keys())] = [j, i-1]
                 if b != cols - 1:
                         vi_grid[a][b+1] = or_grid[a][b+1]
+                        cleared[len(cleared.keys())] = [j, i+1]
                 #B
                 if a != rows - 1:
                     if b != 0:
                         vi_grid[a+1][b-1] = or_grid[a+1][b-1]
-                    vi_grid[a+1][b] == or_grid[a+1][b]
+                        cleared[len(cleared.keys())] = [j+1, i-1]
+                    vi_grid[a+1][b] = or_grid[a+1][b]
+                    cleared[len(cleared.keys())] = [j+1, i]
                     if b != cols - 1:
                         vi_grid[a+1][b+1] = or_grid[a+1][b+1]
+                        cleared[len(cleared.keys())] = [j+1, i+1]
                 
+def marcarCasilla(j, i):
+    global mark_bombs
+    if vi_grid[j][i] == "#":
+        vi_grid[j][i] = "@"
+        mark_bombs -= 1
+    elif vi_grid[j][i] == "@":
+        vi_grid[j][i] == "#"
+        mark_bombs += 1
+
 
 def perdido():
-    print("Oof")
+    global gameOver, or_grid
+    gameOver = True
+    printGrid(or_grid)
+    print("")
+    print("  ▄████  ▄▄▄       ███▄ ▄███▓▓█████     ▒█████   ██▒   █▓▓█████  ██▀███  ")
+    print(" ██▒ ▀█▒▒████▄    ▓██▒▀█▀ ██▒▓█   ▀    ▒██▒  ██▒▓██░   █▒▓█   ▀ ▓██ ▒ ██▒")
+    print("▒██░▄▄▄░▒██  ▀█▄  ▓██    ▓██░▒███      ▒██░  ██▒ ▓██  █▒░▒███   ▓██ ░▄█ ▒")
+    print("░▓█  ██▓░██▄▄▄▄██ ▒██    ▒██ ▒▓█  ▄    ▒██   ██░  ▒██ █░░▒▓█  ▄ ▒██▀▀█▄  ")
+    print("░▒▓███▀▒ ▓█   ▓██▒▒██▒   ░██▒░▒████▒   ░ ████▓▒░   ▒▀█░  ░▒████▒░██▓ ▒██▒")
+    print(" ░▒   ▒  ▒▒   ▓▒█░░ ▒░   ░  ░░░ ▒░ ░   ░ ▒░▒░▒░    ░ ▐░  ░░ ▒░ ░░ ▒▓ ░▒▓░")
+    print("  ░   ░   ▒   ▒▒ ░░  ░      ░ ░ ░  ░     ░ ▒ ▒░    ░ ░░   ░ ░  ░  ░▒ ░ ▒░")
+    print("░ ░   ░   ░   ▒   ░      ░      ░      ░ ░ ░ ▒       ░░     ░     ░░   ░ ")
+    print("      ░       ░  ░       ░      ░  ░       ░ ░        ░     ░  ░   ░     ")
+    print("                                                     ░                   ")
+    
+    
+def getTiempo():
+    global startTime
+    timeDelta = time.time() - startTime
+    return [int(timeDelta / 3600), int(timeDelta / 60), int(timeDelta)]
 
 def clearAll():
     if os.name == "posix": print("clear")
