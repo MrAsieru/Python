@@ -133,8 +133,10 @@ def inputManager():
     global or_grid, vi_grid, j_l, i_l, startTime, mark_bombs, rows, cols, bombs
     startTime = time.time()
     while len(cleared.keys()) != (rows*cols) - bombs:
-        print("%d != %d: %s" %(len(cleared.keys()), rows*cols - bombs, len(cleared.keys()) != (rows*cols) - bombs))
+        #clearAll()
         printGrid(or_grid)
+        print(len(cleared.keys()), rows*cols - bombs)
+        print(cleared)
         printGrid(vi_grid)
         print("Tiempo: %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
         print("Quedan %d bombas" % mark_bombs)
@@ -143,7 +145,7 @@ def inputManager():
         print("Insertar 'mark' mas letra y numero de casilla para marcar y desmarcar. Ej. mark A01")
         inp = input()
         inp = inp.upper()
-        clearAll()
+        
         try:
             if inp[:4] == "MARK":
                 inp = inp[5:]
@@ -167,6 +169,7 @@ def inputManager():
                         inp_n = j
                 if or_grid[inp_n][inp_l] == "0":
                     desbloquearCeros(int(inp_n), int(inp_l))
+                    print("Call desbl...")
                     desbloquearAlrededorCeros()
                 elif or_grid[inp_n][inp_l] == "B":
                     perdido()
@@ -180,16 +183,17 @@ def inputManager():
         print("Has ganado! En %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
 
 def desbloquear(j, i):
-    cleared[len(cleared.keys())] = [j, i]
+    cleared[int(str("%d%d" % (j, i)))] = [j, i]
     vi_grid[j][i] = or_grid[j][i]
 
 def desbloquearCeros(j, i):
+    global vi_grid, cleared
     for e in cleared.values():
         if j == e[0] and i == e[1]:
             return
     if or_grid[j][i] == "0":
         vi_grid[j][i] = "0"
-        cleared[len(cleared.keys())] = [j, i]
+        cleared[int(str("%d%d" % (j, i)))] = [j, i]
     else:
         return
     #T
@@ -207,36 +211,48 @@ def desbloquearCeros(j, i):
 
 def desbloquearAlrededorCeros():
     global or_grid, vi_grid, cleared
-    for a in range(len(vi_grid)):
-        for b in range(len(vi_grid[0])):
-            if or_grid[a][b] == "0" and [a, b] in cleared.values():
-                #T
-                if a!= 0:
-                    if b!= 0:
+    print(range(len(cleared.values())))
+    for e in range(len(cleared.values())):
+        print("a")
+        e = [cleared.values()[e], cleared.values()[e]]
+        if or_grid[e[0]][e[1]] == "0":
+            a, b = e[0], e[1]
+            #T
+            if a != 0:
+                if b != 0:
+                    print("if not [a-1][b-1] in cleared.values(): %s" % (not [a-1][b-1] in cleared.values()))
+                    if not int(str("%d%d" % (a-1, b-1))) in cleared.keys():
                         vi_grid[a-1][b-1] = or_grid[a-1][b-1]
-                        cleared[len(cleared.keys())] = [j-1, i-1]
+                        cleared[int(str("%d%d" % (a-1, b-1)))] = [a-1, b-1]
+                if not int(str("%d%d" % (a-1, b))) in cleared.keys():
                     vi_grid[a-1][b] = or_grid[a-1][b]
-                    cleared[len(cleared.keys())] = [j-1, i]
-                    if b != rows - 1:
+                    cleared[int(str("%d%d" % (a-1, b)))] = [a-1, b]
+                if b != rows - 1:
+                    if not int(str("%d%d" % (a-1, b+1))) in cleared.keys():
                         vi_grid[a-1][b+1] = or_grid[a-1][b+1]
-                        cleared[len(cleared.keys())] = [j-1, i+1]
-                #C
-                if b!= 0:
-                        vi_grid[a][b-1] = or_grid[a][b-1]
-                        cleared[len(cleared.keys())] = [j, i-1]
-                if b != cols - 1:
-                        vi_grid[a][b+1] = or_grid[a][b+1]
-                        cleared[len(cleared.keys())] = [j, i+1]
-                #B
-                if a != rows - 1:
-                    if b != 0:
+                        cleared[int(str("%d%d" % (a-1, b+1)))] = [a-1, b+1]
+            #C
+            if b!= 0:
+                if not int(str("%d%d" % (a, b-1))) in cleared.keys():
+                    vi_grid[a][b-1] = or_grid[a][b-1]
+                    cleared[int(str("%d%d" % (a, b-1)))] = [a, b-1]
+            if b != cols - 1:
+                if not int(str("%d%d" % (a, b+1))) in cleared.keys():
+                    vi_grid[a][b+1] = or_grid[a][b+1]
+                    cleared[int(str("%d%d" % (a, b+1)))] = [a, b+1]
+            #B
+            if a != rows - 1:
+                if b != 0:
+                    if not int(str("%d%d" % (a+1, b-1))) in cleared.keys():
                         vi_grid[a+1][b-1] = or_grid[a+1][b-1]
-                        cleared[len(cleared.keys())] = [j+1, i-1]
+                        cleared[int(str("%d%d" % (a+1, b-1)))] = [a+1, b-1]
+                if not int(str("%d%d" % (a+1, b))) in cleared.keys():
                     vi_grid[a+1][b] = or_grid[a+1][b]
-                    cleared[len(cleared.keys())] = [j+1, i]
-                    if b != cols - 1:
+                    cleared[int(str("%d%d" % (a+1, b)))] = [a+1, b]
+                if b != cols - 1:
+                    if not int(str("%d%d" % (a+1, b+1))) in cleared.keys():
                         vi_grid[a+1][b+1] = or_grid[a+1][b+1]
-                        cleared[len(cleared.keys())] = [j+1, i+1]
+                        cleared[int(str("%d%d" % (a+1, b+1)))] = [a+1, b+1]
                 
 def marcarCasilla(j, i):
     global mark_bombs
