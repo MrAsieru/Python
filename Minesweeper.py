@@ -257,7 +257,7 @@ def marcarCasilla(j, i):
         vi_grid[j][i] = "@"
         mark_bombs -= 1
     elif vi_grid[j][i] == "@":
-        vi_grid[j][i] = "#"
+        vi_grid[j][i] == "#"
         mark_bombs += 1
 
 
