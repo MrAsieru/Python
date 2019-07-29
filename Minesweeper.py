@@ -133,10 +133,8 @@ def inputManager():
     global or_grid, vi_grid, j_l, i_l, startTime, mark_bombs, rows, cols, bombs
     startTime = time.time()
     while len(cleared.keys()) != (rows*cols) - bombs:
-        #clearAll()
-        printGrid(or_grid)
+        clearAll()
         print(len(cleared.keys()), rows*cols - bombs)
-        print(cleared)
         printGrid(vi_grid)
         print("Tiempo: %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
         print("Quedan %d bombas" % mark_bombs)
@@ -169,15 +167,14 @@ def inputManager():
                         inp_n = j
                 if or_grid[inp_n][inp_l] == "0":
                     desbloquearCeros(int(inp_n), int(inp_l))
-                    print("Call desbl...")
                     desbloquearAlrededorCeros()
-                elif or_grid[inp_n][inp_l] == "B":
+                elif or_grid[inp_n][inp_l] == "B" and vi_grid[inp_n][inp_l] != "@":
                     perdido()
                     break
                 elif vi_grid[inp_n][inp_l] == "#":
                     desbloquear(int(inp_n), int(inp_l))
-        except:
-            pass
+        except Exception as e:
+            print(e)
     if not gameOver:
         printGrid(or_grid)
         print("Has ganado! En %dh %dm %ds" % (getTiempo()[0], getTiempo()[1], getTiempo()[2]))
@@ -212,15 +209,15 @@ def desbloquearCeros(j, i):
 def desbloquearAlrededorCeros():
     global or_grid, vi_grid, cleared
     print(range(len(cleared.values())))
-    for e in range(len(cleared.values())):
-        print("a")
-        e = [cleared.values()[e], cleared.values()[e]]
+    for z in range(len(cleared.values())):
+        e = list(cleared.values())[z] #[j, i]
+        
         if or_grid[e[0]][e[1]] == "0":
             a, b = e[0], e[1]
+            
             #T
             if a != 0:
                 if b != 0:
-                    print("if not [a-1][b-1] in cleared.values(): %s" % (not [a-1][b-1] in cleared.values()))
                     if not int(str("%d%d" % (a-1, b-1))) in cleared.keys():
                         vi_grid[a-1][b-1] = or_grid[a-1][b-1]
                         cleared[int(str("%d%d" % (a-1, b-1)))] = [a-1, b-1]
@@ -287,9 +284,7 @@ def getTiempo():
     return [int(timeDelta / 3600), int(timeDelta / 60), int(timeDelta)]
 
 def clearAll():
-    if os.name == "posix": print("clear")
-    else: print("cls")
-    
-    os.system("cls")
+    if os.name == "posix": os.system("clear")
+    else: os.system("cls")
 
 start()
